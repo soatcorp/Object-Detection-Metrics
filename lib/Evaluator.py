@@ -48,6 +48,7 @@ class Evaluator:
             dict['total positives']: total number of ground truth positives;
             dict['total TP']: total number of True Positive detections;
             dict['total FP']: total number of False Positive detections;
+            dict['IoU']: IoU of the class;
         """
         ret = []  # list containing metrics (precision, recall, average precision) of each class
         # List with all ground truths (Ex: [imageName,class,confidence=1, (bb coordinates XYX2Y2)])
@@ -94,6 +95,7 @@ class Evaluator:
             dects = sorted(dects, key=lambda conf: conf[2], reverse=True)
             TP = np.zeros(len(dects))
             FP = np.zeros(len(dects))
+            IoU = np.zeros(len(dects))
             # create dictionary with amount of gts for each image
             det = {key: np.zeros(len(gts[key])) for key in gts}
 
@@ -123,6 +125,7 @@ class Evaluator:
                 else:
                     FP[d] = 1  # count as false positive
                     # print("FP")
+                IoU[d] = iouMax
             # compute precision, recall and average precision
             acc_FP = np.cumsum(FP)
             acc_TP = np.cumsum(TP)
@@ -143,7 +146,8 @@ class Evaluator:
                 'interpolated recall': mrec,
                 'total positives': npos,
                 'total TP': np.sum(TP),
-                'total FP': np.sum(FP)
+                'total FP': np.sum(FP),
+                'IoU': np.mean(IoU)
             }
             ret.append(r)
         return ret
@@ -186,6 +190,7 @@ class Evaluator:
             dict['total positives']: total number of ground truth positives;
             dict['total TP']: total number of True Positive detections;
             dict['total FP']: total number of False Negative detections;
+            dict['IoU']: IoU of the class;
         """
         results = self.GetPascalVOCMetrics(boundingBoxes, IOUThreshold, method)
         result = None
@@ -203,7 +208,7 @@ class Evaluator:
             npos = result['total positives']
             total_tp = result['total TP']
             total_fp = result['total FP']
-
+            iou = result['IoU'] 
             plt.close()
             if showInterpolatedPrecision:
                 if method == MethodAveragePrecision.EveryPointInterpolation:
